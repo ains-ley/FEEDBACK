@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8">
+        <title>Lineage Feedback Form</title>
+        <style>
+        body { font-family: Arial, sans-serif; margin: 40px; max-width: 600px; }
+        label { display: block; margin-top: 15px; font-weight: bold; }
+        input, textarea, select { width: 100%; padding: 8px; margin-top: 5px; }
+        button { margin-top: 20px; padding: 10px 20px; }
+        .success { color: green; margin-top: 20px; }
+        .error { color: red; margin-top: 20px; }
+        </style>
+    </head>
+    <body>
+        <h2>Review Lineage for Entity</h2>
+        <form id="feedbackForm">
+            <label for="entity_name">Entity Name</label>
+            <input
+                type="text"
+                id="entity_name"
+                name="entity_name"
+                required
+                readonly
+            >
+            <label for="reviewer">Your Email</label>
+            <input
+                type="email"
+                id="reviewer"
+                name="reviewer"
+                required
+            >
+            <label for="status">Decision</label>
+            <select id="status" name="status" required>
+                <option value="approved">Approve</option>
+                <option value="rejected">Reject</option>
+            </select>
+            <label for="comment">Comment (optional)</label>
+            <textarea id="comment" name="comment" rows="4"></textarea>
+            <button type="submit">Submit Feedback</button>
+        </form>
+        <div class="success" id="successMsg" style="display: none;">✅ Feedback submitted!</div>
+        <div class="error" id="errorMsg" style="display: none;">❌ Failed to submit feedback.</div>
+        <script>
+        // Automatically fill entity_name from URL param
+        const params = new URLSearchParams(window.location.search);
+        const entity = params.get("doc");
+        if (entity) {
+            document.getElementById("entity_name").value = entity;
+        }
+
+        document.getElementById("feedbackForm").addEventListener("submit", function(e) {
+            e.preventDefault();
+            const data = {
+                entity_name: document.getElementById("entity_name").value,
+                reviewer: document.getElementById("reviewer").value,
+                status: document.getElementById("status").value,
+                comment: document.getElementById("comment").value
+            };
+            fetch("https://<api-id>.execute-api.<region>.amazonaws.com/prod/", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify(data)
+            })
+            .then(res => {
+                if (res.ok) {
+                    document.getElementById("successMsg").style.display = "block";
+                    document.getElementById("errorMsg").style.display = "none";
+                    document.getElementById("feedbackForm").reset();
+                } else {
+                    throw new Error("API error");
+                }
+            })
+            .catch(err => {
+                console.error(err);
+                document.getElementById("successMsg").style.display = "none";
+                document.getElementById("errorMsg").style.display = "block";
+            });
+        });
+        </script>
+    </body>
+</html>
